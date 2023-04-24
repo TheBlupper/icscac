@@ -16,15 +16,17 @@ class QemuInstructionCounter(InstructionCounter):
         self.qemu_binary = qemu_binary
         self.qemu_plugin= Path(qemu_plugin)
 
-    def run_once(self, arg: Sequence[str] = (), stdin: Union[str, bytes] = '') -> int:
+    def run_once(self, args: Sequence[str] = (), stdin: Union[str, bytes] = '') -> int:
         if isinstance(stdin, str): stdin = stdin.encode()
         proc = subprocess.run(
             [self.qemu_binary,
             '-plugin', f'{self.qemu_plugin.absolute()},inline=true',
             '-d', 'plugin',
-            self.target.absolute(), arg],
+            self.target.absolute(), *args],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.PIPE,
             input=stdin)
-        
-        return int(re.search(b'insns: (\d+)\n', proc.stderr).group(1))
+        m = re.search(b'insns: (\d+)\n', proc.stderr)
+        if m is None:
+            raise ValueError(f'Got unexpected output from qemu, instruction count missing: {proc.stderr}')
+        return int(m.group(1))

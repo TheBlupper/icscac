@@ -13,12 +13,15 @@ class PerfInstructionCounter(InstructionCounter):
         target: PathLike):
         self.target = Path(target)
 
-    def run_once(self, arg: Sequence[str] = (), stdin: Union[str, bytes] = '') -> int:
+    def run_once(self, args: Sequence[str] = (), stdin: Union[str, bytes] = '') -> int:
         if isinstance(stdin, str): stdin = stdin.encode()
         proc = subprocess.run(
             ['perf', 'stat', '-einstructions:u', '-x,',
-            self.target.absolute(), arg],
+            self.target.absolute(), *args],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.PIPE,
             input=stdin)
-        return int(re.search(b'(\d+),,instructions:u', proc.stderr).group(1))
+        m = re.search(b'(\d+),,instructions:u', proc.stderr)
+        if m is None:
+            raise ValueError(f'Got unexpected output from perf, instruction count missing: {proc.stderr}')
+        return int(m.group(1))

@@ -102,6 +102,8 @@ def main():
                         default=15,
                         help='Amount of processes to use when multiprocessing')
     args = parser.parse_args()
+    args.prefix = args.prefix.replace('\\n', '\n')
+    args.suffix = args.suffix.replace('\\n', '\n')
 
     target_path = Path(args.target)
     if not os.path.isfile(target_path):
@@ -119,10 +121,18 @@ def main():
         instr_counter = QemuInstructionCounter(args.target, args.qemu_binary, args.qemu_plugin)
 
     def run_inputs(inputs):
-        inputs = [(args.prefix + inp + args.suffix).replace('\\n', '\n')
+
+        if args.input_mode == 'stdin':
+            inputs = [args.prefix + inp + args.suffix
                 for inp in inputs]
+        elif args.input_mode == 'arg':
+            prefix = [args.prefix] if args.prefix else []
+            suffix = [args.suffix] if args.suffix else []
+            inputs = [prefix + [inp] + suffix
+                for inp in inputs]
+                
         run_parallel_args = {
-            'args' if args.input_mode=='arg' else 'stdins': inputs,
+            'argss' if args.input_mode=='arg' else 'stdins': inputs,
             'proc_count': args.procs
         }
         yield from instr_counter.run_parallel(**run_parallel_args)

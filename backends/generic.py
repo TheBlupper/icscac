@@ -12,7 +12,7 @@ class InstructionCounter:
         return proc_id, self.run_once(args, stdin)
     
     def run_parallel(self,
-            args: Sequence[str] = None,
+            argss: Sequence[Sequence[str]] = None,
             stdins: Sequence[str] = None,
             proc_count: int = 10) -> Iterable[int]:
         '''
@@ -20,20 +20,20 @@ class InstructionCounter:
         are guaranteed to be in the same order as inputs.
         '''
         
-        if args is not None and stdins is None:
-            stdins = ['']*len(args)
-        elif args is None and stdins is not None:
-            args = ['']*len(stdins)
-        elif args is None and stdins is None: # None provided
+        if argss is not None and stdins is None:
+            stdins = ['']*len(argss)
+        elif argss is None and stdins is not None:
+            argss = [[] for _ in range(len(stdins))]
+        elif argss is None and stdins is None: # None provided
             raise ValueError('Provide at least one of argss and stdins')
         else: # Both provided
-            if len(args) != len(stdins):
+            if len(argss) != len(stdins):
                 raise ValueError('Length mismatch between argss and stdins')
             
         # imap_unordered is only marginally faster and
         # makes things more cumbersome
         for proc_id, instr_count in Pool(proc_count).imap(
             self._run_once_wrapper,
-            zip(range(len(args)), args, stdins)
+            zip(range(len(argss)), argss, stdins)
         ):
             yield instr_count  
