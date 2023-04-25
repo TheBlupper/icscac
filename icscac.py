@@ -10,10 +10,16 @@ from .backends.qemu import QemuInstructionCounter
 def main():
     parser = argparse.ArgumentParser(
         prog='scac',
-        description='Pre-made helper functions to analyze side-channels.')
-    
-    parser.add_argument('target', type=str,
-                        help='target program to analyze')
+        description='''
+        Pre-made helper functions to analyze side-channels.
+        
+        If bruting via a program argument, denote the input position by
+        @@. If bruting via stdin it will be placed between the suffix and prefix.
+        
+        Place the target program and its arguments, prefixed by "-- ", after all
+        the positional arguments. For example:
+        
+        python3 -m icscac --arg --brute-length -- ./icscac/examples/check @@''')
     
     search_mode_group = parser.add_mutually_exclusive_group(required=True)
     search_mode_group.add_argument('--stdin',
@@ -25,7 +31,7 @@ def main():
         action='store_const',
         const='arg',
         dest='input_mode',
-        help='Send input via argv[2]')
+        help='Send input via a program argument, specified by @@')
 
     search_mode_group = parser.add_mutually_exclusive_group(required=True)
     search_mode_group.add_argument('--brute-length', 
@@ -79,33 +85,38 @@ def main():
         Only applicable for the qemu backend''')
     
     parser.add_argument('-p', '--prefix', type=str,
-                        default='',
-                        help='Prefix for program input')
+        default='',
+        help='Prefix for stdin input')
     
     parser.add_argument('-s', '--suffix', type=str,
-                        default='',
-                        help='Suffix for program input')
+        default='',
+        help='Suffix for stdin input')
     
     parser.add_argument('-a', '--alph', type=str,
-                        default=string.printable.strip(),
-                        help='Possible input characters')
+        default=string.printable.strip(),
+        help='Possible input characters')
 
     parser.add_argument('-t', '--tmpchar', type=str,
-                        default='A',
-                        help='Temporary character to use to fill out the input')
-    
+        default='A',
+        help='Temporary character to use to fill out the input')
+
     parser.add_argument('-l', '--length', type=int,
-                        default=32,
-                        help='Length of input to try, or maximum length when in length mode')
-    
+        default=32,
+        help='Length of input to try, or maximum length when in length mode')
+
     parser.add_argument('--procs', type=int,
-                        default=15,
-                        help='Amount of processes to use when multiprocessing')
+        default=15,
+        help='Amount of processes to use when multiprocessing')
+
+    parser.add_argument('argv', nargs=argparse.REMAINDER)
     args = parser.parse_args()
+
+    target_path = Path(args.argv[1])
+    argv = args.argv[2:]
+
     args.prefix = args.prefix.replace('\\n', '\n')
     args.suffix = args.suffix.replace('\\n', '\n')
 
-    target_path = Path(args.target)
     if not os.path.isfile(target_path):
         raise ValueError('Target program does not exist')
 
@@ -116,26 +127,26 @@ def main():
         
         instr_counter = PINInstructionCounter(pin_path, target_path, args.arch)
     elif args.backend == 'perf':
-        instr_counter = PerfInstructionCounter(args.target)
+        instr_counter = PerfInstructionCounter(target_path)
     elif args.backend == 'qemu':
-        instr_counter = QemuInstructionCounter(args.target, args.qemu_binary, args.qemu_plugin)
+        instr_counter = QemuInstructionCounter(target_path, args.qemu_binary, args.qemu_plugin)
 
     def run_inputs(inputs):
-
         if args.input_mode == 'stdin':
-            inputs = [args.prefix + inp + args.suffix
+            argss = [()]*len(inputs)
+            stdins = [args.prefix + inp + args.suffix
                 for inp in inputs]
         elif args.input_mode == 'arg':
-            prefix = [args.prefix] if args.prefix else []
-            suffix = [args.suffix] if args.suffix else []
-            inputs = [prefix + [inp] + suffix
+            assert argv.count('@@') == 1
+            argss = [[arg if arg != '@@' else inp for arg in argv]
                 for inp in inputs]
-                
-        run_parallel_args = {
-            'argss' if args.input_mode=='arg' else 'stdins': inputs,
-            'proc_count': args.procs
-        }
-        yield from instr_counter.run_parallel(**run_parallel_args)
+            stdins = [args.prefix + args.suffix]*len(inputs)
+
+        yield from instr_counter.run_parallel(
+            argss=argss,
+            stdins=stdins,
+            proc_count=args.procs
+        )
         
     if args.search_mode == 'brute-length':
         brute_length(args.length, run_inputs, args.tmpchar)
@@ -147,13 +158,14 @@ def main():
         brute_backward(args.alph, args.length, run_inputs, args.tmpchar)
 
 def brute_length(max_length, run_inputs, tmp_char):
-    inputs = [tmp_char*i for i in range(max_length)]
+    inputs = [tmp_char*i for i in range(1, max_length)]
     outputs = []
-    for length, inscount in enumerate(run_inputs(inputs)):
+    for i, inscount in enumerate(run_inputs(inputs)):
+        length = len(inputs[i])
         outputs += [inscount]
         print(f'{length=} {inscount=}')
     most_instrs = max(outputs)
-    best_length = outputs.index(most_instrs)
+    best_length = len(inputs[outputs.index(most_instrs)])
     print(f'{most_instrs=} {best_length=}')
 
 def brute_backward(alph, length, run_inputs, tmp_char):

@@ -21,14 +21,17 @@ class PINInstructionCounter(InstructionCounter):
     def run_once(self, args: Sequence[str] = (), stdin: Union[str, bytes] = '') -> int:
         if isinstance(stdin, str): stdin = stdin.encode()
         with tempfile.TemporaryDirectory() as tmpdir:
-            p=subprocess.run(
+            proc = subprocess.run(
                 [self.pin_binary_path.absolute(),
                 '-t', self.inscount_path.absolute(),
                 '--', self.target_path.absolute(), *args],
                 stdout=subprocess.PIPE,
-                stderr=subprocess.DEVNULL,
+                stderr=subprocess.PIPE,
                 input=stdin,
                 cwd=tmpdir)
-            with open(Path(tmpdir)/'inscount.out', 'r') as outfile:
-                outfile.seek(6)
-                return int(outfile.read().strip())
+            try:
+                with open(Path(tmpdir)/'inscount.out', 'r') as outfile:
+                    outfile.seek(6)
+                    return int(outfile.read().strip())
+            except Exception:
+                raise ValueError(f'Pin failed, stdout + stderr: {proc.stdout + proc.stderr}')

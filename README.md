@@ -7,7 +7,7 @@ It provides easy to use methods of side-channel analysis of binaries by counting
 ## Example:
 
 ## **Just the Check Please** from PlaidCTF 2023
-python3 -m icscac --arg --brute-length ./icscac/examples/check
+python3 -m icscac --arg --brute-length -- ./icscac/examples/check @@
 ```
 length=0 inscount=255635
 length=1 inscount=255685
@@ -21,7 +21,7 @@ length=31 inscount=255880
 most_instrs=30191787 best_length=16
 ```
 
-python3 -m icscac --arg --brute-all -l 16 ./icscac/examples/check
+python3 -m icscac --arg --brute-all -l 16 -- ./icscac/examples/check @@
 ```
 instr_count=30191457 '0AAAAAAAAAAAAAAA'
 instr_count=30191346 '1AAAAAAAAAAAAAAA'

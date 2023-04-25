@@ -3,7 +3,7 @@ from typing import Sequence, Union, Iterable
 from multiprocessing import Pool
 
 class InstructionCounter:
-    def run_once(self, arg: Sequence[str] = (), stdin: Union[str, bytes] = '') -> int:
+    def run_once(self, args: Sequence[Sequence[str]] = (), stdin: Union[str, bytes] = '') -> int:
         raise NotImplementedError()
     
     def _run_once_wrapper(self, inp):
