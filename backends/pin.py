@@ -33,5 +33,5 @@ class PINInstructionCounter(InstructionCounter):
                 with open(Path(tmpdir)/'inscount.out', 'r') as outfile:
                     outfile.seek(6)
                     return int(outfile.read().strip())
-            except Exception:
+            except (FileNotFoundError, ValueError):
                 raise ValueError(f'Pin failed, stdout + stderr: {proc.stdout + proc.stderr}')

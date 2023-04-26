@@ -21,13 +21,13 @@ def main():
         
         python3 -m icscac --arg --brute-length -- ./icscac/examples/check @@''')
     
-    search_mode_group = parser.add_mutually_exclusive_group(required=True)
-    search_mode_group.add_argument('--stdin',
+    input_mode_group = parser.add_mutually_exclusive_group(required=True)
+    input_mode_group.add_argument('--stdin',
         action='store_const',
         const='stdin',
         dest='input_mode',
         help='Send input via stdin')
-    search_mode_group.add_argument('--arg', 
+    input_mode_group.add_argument('--arg', 
         action='store_const',
         const='arg',
         dest='input_mode',
@@ -124,7 +124,6 @@ def main():
         pin_path = Path(args.pin)
         if not os.path.isfile(pin_path/'pin'):
             raise ValueError('Pin path does not contain a "pin" binary!')
-        
         instr_counter = PINInstructionCounter(pin_path, target_path, args.arch)
     elif args.backend == 'perf':
         instr_counter = PerfInstructionCounter(target_path)
@@ -215,7 +214,7 @@ def brute_all(alph, length, run_inputs, tmp_char):
         best = max(outputs)
         best_idx, best_char = input_lut[outputs.index(best)]
         found[best_idx] = best_char
-        print(f'\n{best_idx=} {best_char=}')
+        print(f'{best_idx=} {best_char=}')
     print(f'found input {"".join(found)}')
 
 if __name__ == '__main__':
