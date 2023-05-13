@@ -31,7 +31,7 @@ def main():
         action='store_const',
         const='arg',
         dest='input_mode',
-        help='Send input via a program argument, specified by @@')
+        help='Send input via a program argument, denoted by @@')
 
     search_mode_group = parser.add_mutually_exclusive_group(required=True)
     search_mode_group.add_argument('--brute-length', 
@@ -62,7 +62,7 @@ def main():
         choices=['perf', 'pin', 'qemu'],
         default='perf',
         help='''Instruction-counting backend to use.
-                Pin is more exact, perf is much faster, qemu is mid.''')
+                Pin is more exact, perf is much faster, qemu is best.''')
     
     parser.add_argument('--arch', type=str,
         default='intel64',
@@ -76,7 +76,7 @@ def main():
     
     parser.add_argument('--qemu-binary', type=str,
         default='qemu-x86_64',
-        help='''Name or path to the appropriate qemu usermode binary.
+        help='''Name or path of the appropriate qemu usermode binary.
         Only applicable for the qemu backend''')
     
     parser.add_argument('--qemu-plugin', type=str,
