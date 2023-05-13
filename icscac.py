@@ -86,12 +86,17 @@ def main():
     
     parser.add_argument('-p', '--prefix', type=str,
         default='',
-        help='Prefix for stdin input')
+        help='Prefix for brute input')
     
     parser.add_argument('-s', '--suffix', type=str,
         default='',
-        help='Suffix for stdin input')
-    
+        help='Suffix for brute input')
+
+    parser.add_argument('--constant-stdin', type=str,
+        default='',
+        help='''Send this string to stdin.
+        Only applicable when using --arg, use --prefix and --suffix otherwise''')   
+     
     parser.add_argument('-a', '--alph', type=str,
         default=string.printable.strip(),
         help='Possible input characters')
@@ -137,9 +142,12 @@ def main():
                 for inp in inputs]
         elif args.input_mode == 'arg':
             assert argv.count('@@') == 1
-            argvs = [[arg if arg != '@@' else inp for arg in argv]
+            argvs = [
+                    [arg if arg != '@@'
+                    else args.prefix + inp + args.suffix
+                    for arg in argv]
                 for inp in inputs]
-            stdins = [args.prefix + args.suffix]*len(inputs)
+            stdins = [args.constant_stdin]*len(inputs)
         yield from instr_counter.run_parallel(
             argvs=argvs,
             stdins=stdins,
