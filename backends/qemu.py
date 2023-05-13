@@ -16,13 +16,13 @@ class QemuInstructionCounter(InstructionCounter):
         self.qemu_binary = qemu_binary
         self.qemu_plugin= Path(qemu_plugin)
 
-    def run_once(self, args: Sequence[str] = (), stdin: Union[str, bytes] = '') -> int:
+    def run_once(self, argv: Sequence[str] = (), stdin: Union[str, bytes] = '') -> int:
         if isinstance(stdin, str): stdin = stdin.encode()
         proc = subprocess.run(
             [self.qemu_binary,
             '-plugin', f'{self.qemu_plugin.absolute()},inline=true',
             '-d', 'plugin',
-            self.target.absolute(), *args],
+            self.target.absolute(), *argv],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.PIPE,
             input=stdin)
