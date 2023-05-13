@@ -18,13 +18,13 @@ class PINInstructionCounter(InstructionCounter):
         self.inscount_path = self.pin_path / REL_INSCOUNT_PATH.format(arch)
         self.target_path = Path(target_path)
 
-    def run_once(self, args: Sequence[str] = (), stdin: Union[str, bytes] = '') -> int:
+    def run_once(self, argv: Sequence[str] = (), stdin: Union[str, bytes] = '') -> int:
         if isinstance(stdin, str): stdin = stdin.encode()
         with tempfile.TemporaryDirectory() as tmpdir:
             proc = subprocess.run(
                 [self.pin_binary_path.absolute(),
                 '-t', self.inscount_path.absolute(),
-                '--', self.target_path.absolute(), *args],
+                '--', self.target_path.absolute(), *argv],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 input=stdin,

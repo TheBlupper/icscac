@@ -13,11 +13,11 @@ class PerfInstructionCounter(InstructionCounter):
         target: PathLike):
         self.target = Path(target)
 
-    def run_once(self, args: Sequence[str] = (), stdin: Union[str, bytes] = '') -> int:
+    def run_once(self, argv: Sequence[str] = (), stdin: Union[str, bytes] = '') -> int:
         if isinstance(stdin, str): stdin = stdin.encode()
         proc = subprocess.run(
             ['perf', 'stat', '-einstructions:u', '-x,',
-            self.target.absolute(), *args],
+            self.target.absolute(), *argv],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.PIPE,
             input=stdin)
