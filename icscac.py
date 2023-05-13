@@ -132,7 +132,7 @@ def main():
 
     def run_inputs(inputs):
         if args.input_mode == 'stdin':
-            argss = [()]*len(inputs)
+            argss = [argv]*len(inputs)
             stdins = [args.prefix + inp + args.suffix
                 for inp in inputs]
         elif args.input_mode == 'arg':
@@ -140,7 +140,6 @@ def main():
             argss = [[arg if arg != '@@' else inp for arg in argv]
                 for inp in inputs]
             stdins = [args.prefix + args.suffix]*len(inputs)
-
         yield from instr_counter.run_parallel(
             argss=argss,
             stdins=stdins,
