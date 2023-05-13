@@ -9,7 +9,7 @@ from .backends.qemu import QemuInstructionCounter
 
 def main():
     parser = argparse.ArgumentParser(
-        prog='scac',
+        prog='icscac',
         description='''
         Pre-made helper functions to analyze side-channels.
         
