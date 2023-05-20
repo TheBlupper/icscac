@@ -60,7 +60,7 @@ def main():
     
     parser.add_argument('-b', '--backend',
         choices=['perf', 'pin', 'qemu'],
-        default='perf',
+        default='qemu',
         help='''Instruction-counting backend to use.
                 Pin is more exact, perf is much faster, qemu is best.''')
     
